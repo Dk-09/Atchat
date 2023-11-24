@@ -6,10 +6,10 @@ import jwt from "jsonwebtoken"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import bcrypt from "bcrypt"
+import { WebSocketServer } from "ws"
 
 const mongoURL = process.env.MONGO_URL
 const jwtSecret = process.env.JWT_SECRET
-
 const app = express()
 mongoose.connect(mongoURL).then(() => { console.log("[+] Connected to Atlas DB")}, (err) => {console.log("[-] Error connecting to Atlas DB")})
 app.use(express.json())
@@ -65,9 +65,27 @@ app.post("/register", async (req,res) => {
     catch(err){
         return res.status(406).json("DUP USR")
     }
-        
-    
 })
 
-app.listen(4000)
+const server = app.listen(4000)
 
+const wss = new WebSocketServer({server})
+wss.on('connection',(connection, req) => {
+    const cookie = req.headers.cookie
+    if (cookie){
+        const tokenCookieString = cookie.split(";").find(str => str.startsWith('token=')).slice(6,)
+        if (tokenCookieString) {
+            jwt.verify(tokenCookieString, jwtSecret, {}, (err, userData) => {
+                if (err) throw err
+                const {userId, username} = userData
+                connection.userId = userId
+                connection.username = username
+            })
+        }        
+    }
+    [...wss.clients].forEach(clients => {
+        clients.send(JSON.stringify(
+            {online:[...wss.clients].map(c => ({userId: c.userId, username: c.username}))}
+        ))
+    })
+})

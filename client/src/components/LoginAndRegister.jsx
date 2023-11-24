@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/card"
 import axios from "axios"
 import { UserContext } from "./UserContext"
-import { ToastAction } from "@/components/ui/toast"
-import { useToast } from "@/components/ui/use-toast"
-import { Toast } from "@radix-ui/react-toast"
 import { Toaster } from "@/components/ui/toaster"
+import handleError from "./HandleError"
+import { useToast } from "@/components/ui/use-toast"
+
+
 
 export default function LoginAndRegister() {
 
@@ -35,28 +36,23 @@ export default function LoginAndRegister() {
         const {username, password} = creds
         await axios.post(url, {username, password})
         .then((res) => {
-            setUsername(username)
+            isRegisterOrLogin === "Register" ? // check if the user is logging in or registering and accordingly send the message
+            toast({
+                description: "✅ User created successfully" 
+            })
+            :
+            toast({
+                description: "✅ Logged in successfully"
+            })
+            setTimeout(() => {
+                setUsername(username)
             setId(res.response.data.id)
+            }, 2000)
+            
         })
         .catch((res) => {
-            if(res.response.status == 406) { handleError(res) }                
+            if(res.response.status == 406) { handleError(res, toast) }                
         })
-    }
-
-    async function handleError(res){
-        if(res.response.data === "DUP USR"){
-            toast({
-                variant: "destructive",
-                description: "The usename is already taken"
-            })
-        }
-        else if(res.response.data === "INVALID"){
-            toast({
-                variant: "destructive",
-                description: "Username or Password is wrong"
-            })
-        }
-
     }
 
     return (
