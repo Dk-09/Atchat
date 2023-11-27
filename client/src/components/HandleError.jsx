@@ -1,5 +1,5 @@
-export default async function handleError(res, toast){
-    if(res.response.data === "DUP USR"){
+export default async function handleError(data, toast){
+    if(data === "DUP USR"){
         return(
             toast({
             variant: "destructive",
@@ -7,7 +7,7 @@ export default async function handleError(res, toast){
         }))
         
     }
-    else if(res.response.data === "INVALID"){
+    else if(data === "INVALID"){
         return(toast({
             variant: "destructive",
             description: "Username or Password is wrong"

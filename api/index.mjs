@@ -83,6 +83,16 @@ wss.on('connection',(connection, req) => {
             })
         }        
     }
+
+    connection.on("message", (message) => {
+        const {message: {text, to}} = JSON.parse((message))
+        if (text && to){
+            [...wss.clients]
+            .filter(c => c.userId === to)
+            .forEach(c => c.send(JSON.stringify({text})))
+        }
+    });
+
     [...wss.clients].forEach(clients => {
         clients.send(JSON.stringify(
             {online:[...wss.clients].map(c => ({userId: c.userId, username: c.username}))}

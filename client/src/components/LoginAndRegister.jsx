@@ -44,14 +44,14 @@ export default function LoginAndRegister() {
             toast({
                 description: "✅ Logged in successfully"
             })
-            setTimeout(() => {
+            setTimeout(() => {        
                 setUsername(username)
-            setId(res.response.data.id)
+                setId(res.data.id)                
             }, 2000)
             
         })
         .catch((res) => {
-            if(res.response.status == 406) { handleError(res, toast) }                
+            if(res.response.status == 406) { handleError(res.response.data, toast) }                
         })
     }
 
