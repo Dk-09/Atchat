@@ -43,11 +43,9 @@ export default function Chat(){
     function sendMessage(ev){
         ev.preventDefault()
         ws.send(JSON.stringify({
-            message: {
                 text: newMessage,
                 to: selectedId,
-            },        
-        }))                
+            }))                
         setMessage(prev => [...prev,{text:newMessage,isOurs:true}])
         setNewMessage('')
         

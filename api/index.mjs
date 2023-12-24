@@ -7,6 +7,7 @@ import cors from "cors"
 import cookieParser from "cookie-parser"
 import bcrypt from "bcrypt"
 import { WebSocketServer } from "ws"
+import messageModel from "./models/Message.mjs"
 
 const mongoURL = process.env.MONGO_URL
 const jwtSecret = process.env.JWT_SECRET
@@ -84,12 +85,20 @@ wss.on('connection',(connection, req) => {
         }        
     }
 
-    connection.on("message", (message) => {
-        const {message: {text, to}} = JSON.parse((message))
+    connection.on("message", async (message) => {
+        const {text,to} = JSON.parse((message))
         if (text && to){
+            const messageDoc = await messageModel.create({
+                from: connection.userId,
+                to: to,
+                text,
+            });
             [...wss.clients]
             .filter(c => c.userId === to)
-            .forEach(c => c.send(JSON.stringify({text})))
+            .forEach(c => c.send(JSON.stringify({
+                text,
+                id: messageDoc._id
+            })))
         }
     });
 
