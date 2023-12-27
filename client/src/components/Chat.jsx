@@ -35,19 +35,24 @@ export default function Chat(){
         if ("online" in messageData){
             showOnlinePeople(messageData.online)
         }
-        else{            
-            setMessage(prev => [...prev,{text:messageData.text,isOurs:false}])
+        else if("text" in messageData){            
+            setMessage(prev => [...prev,{to:messageData.to,text:messageData.text}])
+            console.log(messageData)
+            console.log(id)
+            console.log(message)
         }
     }
 
     function sendMessage(ev){
         ev.preventDefault()
         ws.send(JSON.stringify({
+                form: id,
                 text: newMessage,
                 to: selectedId,
             }))                
-        setMessage(prev => [...prev,{text:newMessage,isOurs:true}])
+        setMessage(prev => [...prev,{text:newMessage}])
         setNewMessage('')
+        console.log(message)
         
     }
 
@@ -89,16 +94,16 @@ export default function Chat(){
                     {!!selectedId && (
                         <div className="">                    
                             {message.map(message => {
-                                if (message.isOurs == true) {
+                                if (message.to !== id) { // this means that the message is not from us but from the other user
                                     return(
-                                        <div className="text-primary">                                    
+                                        <div className="text-primary"> 
                                             {message.text}
                                         </div> 
                                     )
                                 }
                                 else{
                                     return(
-                                        <div className="text-red">                                        
+                                        <div className="-red">                                        
                                             {message.text}
                                         </div> 
                                     )

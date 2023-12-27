@@ -91,11 +91,13 @@ wss.on('connection',(connection, req) => {
             const messageDoc = await messageModel.create({
                 from: connection.userId,
                 to: to,
-                text,
+                text
             });
             [...wss.clients]
             .filter(c => c.userId === to)
             .forEach(c => c.send(JSON.stringify({
+                from:c.from,
+                to: to,
                 text,
                 id: messageDoc._id
             })))
