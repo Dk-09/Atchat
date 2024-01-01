@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useState, useRef } from "react"
 import Avatar from "./Avatar"
 import { UserContext } from "./UserContext"
 
@@ -12,6 +12,7 @@ export default function Chat(){
     const {username,id} = useContext(UserContext)
     const [newMessage, setNewMessage] = useState([])
     const [message, setMessage] = useState([])
+    const divUnderMessages = useRef()
 
     const tips = ['type :(){ :|:& };: in your terminal to make your pc faster', 'use the shortcut alt + f4 to open YT', 'make sure to use an simple password coz you can\'t change it again']
     const selectedTip = Math.floor(Math.random() * tips.length)
@@ -21,6 +22,7 @@ export default function Chat(){
         setWs(ws)
         ws.addEventListener("message", handleMessage)
     }, [])
+
 
     function showOnlinePeople(messageData){
         const people = {}
@@ -37,9 +39,6 @@ export default function Chat(){
         }
         else if("text" in messageData){            
             setMessage(prev => [...prev,{to:messageData.to,text:messageData.text}])
-            console.log(messageData)
-            console.log(id)
-            console.log(message)
         }
     }
 
@@ -52,9 +51,14 @@ export default function Chat(){
             }))                
         setMessage(prev => [...prev,{text:newMessage}])
         setNewMessage('')
-        console.log(message)
-        
     }
+
+    useEffect(() => {
+        const div = divUnderMessages.current
+        if (div){
+            div.scrollIntoView({behavior: "smooth", block: "end"})
+        }
+    }, [message])
 
     const onlineUserOtherThanUs = {...peopleOnline}
     delete onlineUserOtherThanUs[id]
@@ -92,23 +96,17 @@ export default function Chat(){
                         </div>
                     )}
                     {!!selectedId && (
-                        <div className="">                    
-                            {message.map(message => {
-                                if (message.to !== id) { // this means that the message is not from us but from the other user
-                                    return(
-                                        <div className="text-primary"> 
-                                            {message.text}
-                                        </div> 
-                                    )
-                                }
-                                else{
-                                    return(
-                                        <div className="-red">                                        
-                                            {message.text}
-                                        </div> 
-                                    )
-                                }                                                                                                                                                                                      
-                            })}
+                        <div className="relative h-full">                    
+                            <div className="overflow-y-scroll absolute top-10 left-10 right-10 bottom-2 scroll-m-2"> 
+                                {message.map(message => (
+                                    <div className={"overflow-x-hidden max-h-screen " + (message.to === id ? "text-left" : "text-right")}>                    
+                                    <div key={message._id} className={"max-h-screen text-left overflow-wrap inline-block m-2 p-2 rounded-md " + (message.to === id ? "bg-secondary" : "bg-primary")}> 
+                                        {message.text}       
+                                    </div>                   
+                                    </div>
+                                ))}
+                                <div ref={divUnderMessages}></div>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -133,7 +131,6 @@ export default function Chat(){
                     </Button>
                 </form>
                 )}
-                
             </div>
         </div>
     )
