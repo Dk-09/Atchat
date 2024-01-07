@@ -1,13 +1,15 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useContext, useEffect, useState, useRef } from "react"
-import Avatar from "./Avatar"
+import Contact from "./Contact"
 import { UserContext } from "./UserContext"
+import axios from "axios"
 
 export default function Chat(){
 
     const [ws, setWs] = useState(null)
     const [peopleOnline, setPeopleOnline] = useState({})
+    const [peopleOffline, setPeopleOffline] = useState({})
     const [selectedId, setSelectedId] = useState()
     const {username,id} = useContext(UserContext)
     const [newMessage, setNewMessage] = useState([])
@@ -18,10 +20,15 @@ export default function Chat(){
     const selectedTip = Math.floor(Math.random() * tips.length)
 
     useEffect(() => {
+        connectToWebSocket()
+    }, [])
+
+    function connectToWebSocket(){
         const ws = new WebSocket('ws://localhost:4000')
         setWs(ws)
         ws.addEventListener("message", handleMessage)
-    }, [])
+        ws.addEventListener("close", () => {connectToWebSocket()})
+    }
 
 
     function showOnlinePeople(messageData){
@@ -60,26 +67,56 @@ export default function Chat(){
         }
     }, [message])
 
+    useEffect(() => {
+        if (selectedId){
+            axios.get("/messages/" + selectedId).then((res) => {
+                setMessage(res.data)
+            })
+        }
+    }, [selectedId])
+
+    useEffect(() => {
+        axios.get('/people').then(res => {
+            const offlinePeople = res.data
+            .filter(p => p._id !== id)
+            .filter(p => !Object.keys(peopleOnline).includes(p._id))
+            const offlinePeP = {}
+            offlinePeople.forEach(p => {
+                offlinePeP[p._id] = p
+            })
+            setPeopleOffline(offlinePeP)
+        })
+    }, [peopleOnline])
+
     const onlineUserOtherThanUs = {...peopleOnline}
     delete onlineUserOtherThanUs[id]
 
     return(
         <div className="flex h-screen">
-            <div className="w-1/5 border-r-2">
+            <div className="overflow-y-scroll w-1/5 min-w-1/5 border-r-2">
                 <div className="head text-5xl text-center py-10 text-primary">
                     Atchat
                 </div>
                 <div className="flex flex-col gap-4 w-full">                    
                     {Object.keys(onlineUserOtherThanUs).map(userId => (            
-                        <div key={userId} onClick={() => {setSelectedId(userId)}}  
-                            className={"flex gap-4 p-2 mr-16 ml-16 pl-2 items-center text-center border-2 rounded-md cursor-pointer hover:scale-125 duration-100 " + (selectedId === userId ? "border-primary scale-125 bg-secondary" : "")
-                            }>
-                            <Avatar username={onlineUserOtherThanUs[userId]} 
-                                    userId={userId} 
-                                    selectedId={selectedId} 
-                            />
-                            {onlineUserOtherThanUs[userId]}
-                        </div>
+                        <Contact 
+                            key={userId}
+                            userId={userId}
+                            selectedId={selectedId}     
+                            onClick={() => setSelectedId(userId)}
+                            isOnline={true}
+                            username={onlineUserOtherThanUs[userId]}
+                        />
+                    ))}
+                    {Object.keys(peopleOffline).map(userId => (            
+                        <Contact 
+                            key={userId}
+                            userId={userId}
+                            selectedId={selectedId}     
+                            onClick={() => setSelectedId(userId)}
+                            isOnline={false}
+                            username={peopleOffline[userId].username}
+                        />
                     ))}
                 </div>
             </div>
@@ -99,10 +136,10 @@ export default function Chat(){
                         <div className="relative h-full">                    
                             <div className="overflow-y-scroll absolute top-10 left-10 right-10 bottom-2 scroll-m-2"> 
                                 {message.map(message => (
-                                    <div className={"overflow-x-hidden max-h-screen " + (message.to === id ? "text-left" : "text-right")}>                    
-                                    <div key={message._id} className={"max-h-screen text-left overflow-wrap inline-block m-2 p-2 rounded-md " + (message.to === id ? "bg-secondary" : "bg-primary")}> 
-                                        {message.text}       
-                                    </div>                   
+                                    <div key={message._id} className={"overflow-x-hidden max-h-screen " + (message.to === id ? "text-left" : "text-right")}>                    
+                                        <div className={"max-h-screen text-left overflow-wrap inline-block m-2 p-2 rounded-md " + (message.to === id ? "bg-secondary" : "bg-primary")}> 
+                                            {message.text}       
+                                        </div>                   
                                     </div>
                                 ))}
                                 <div ref={divUnderMessages}></div>

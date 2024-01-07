@@ -49,6 +49,27 @@ app.post("/login", async (req, res) => {
     }
 })
 
+app.get("/messages/:userId", (req, res) => {
+    const {userId} = req.params
+    if (userId){
+        const token  = req.cookies.token
+        if (token){
+            jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+                if (err) throw err
+                const ourUserID = userData.userId
+                const result = await messageModel.find({
+                    from: {$in:[userId, ourUserID]},
+                    to: {$in:[userId, ourUserID]},
+                }).sort({createdAt: 1})
+                res.json(result)
+            })
+        }
+        else{
+            res.status(401).json('no token')
+        }    
+    }
+})
+
 app.post("/register", async (req,res) => {
     const {username, password} = req.body 
     const hashedPassword = bcrypt.hashSync(password, salt)
@@ -66,6 +87,11 @@ app.post("/register", async (req,res) => {
     catch(err){
         return res.status(406).json("DUP USR")
     }
+})
+
+app.get('/people', async(req, res)=>{
+    const users = await userModel.find({},{'_id':1,username:1})
+    res.json(users)
 })
 
 const server = app.listen(4000)
