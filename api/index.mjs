@@ -49,6 +49,10 @@ app.post("/login", async (req, res) => {
     }
 })
 
+app.post('/logout', (req, res) => {
+    res.cookie('token', '',{sameSite: 'none', secure: true}).json('ok')
+})
+
 app.get("/messages/:userId", (req, res) => {
     const {userId} = req.params
     if (userId){
@@ -98,6 +102,31 @@ const server = app.listen(4000)
 
 const wss = new WebSocketServer({server})
 wss.on('connection',(connection, req) => {
+
+    function setOnlinePeople() {
+        [...wss.clients].forEach(clients => {
+        clients.send(JSON.stringify(
+            {online:[...wss.clients].map(c => ({userId: c.userId, username: c.username}))}
+        ))
+        })
+    }
+
+    connection.isAlive = true
+
+    connection.timer = setInterval(() => {
+        connection.ping()
+        connection.deathTimer = setTimeout(() => {
+            connection.isAlive = false
+            clearInterval(connection.timer)
+            connection.terminate()
+            setOnlinePeople()
+        }, 1000)
+    }, 5000)
+
+    connection.on("pong", () => {
+        clearTimeout(connection.deathTimer)
+    })
+
     const cookie = req.headers.cookie
     if (cookie){
         const tokenCookieString = cookie.split(";").find(str => str.startsWith('token=')).slice(6,)
@@ -130,9 +159,5 @@ wss.on('connection',(connection, req) => {
         }
     });
 
-    [...wss.clients].forEach(clients => {
-        clients.send(JSON.stringify(
-            {online:[...wss.clients].map(c => ({userId: c.userId, username: c.username}))}
-        ))
-    })
+   setOnlinePeople() 
 })

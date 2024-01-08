@@ -11,16 +11,15 @@ export default function Chat(){
     const [peopleOnline, setPeopleOnline] = useState({})
     const [peopleOffline, setPeopleOffline] = useState({})
     const [selectedId, setSelectedId] = useState()
-    const {username,id} = useContext(UserContext)
+    const {username,id, setId, setUsername} = useContext(UserContext)
     const [newMessage, setNewMessage] = useState([])
     const [message, setMessage] = useState([])
+    const [tip, setTip] = useState(['type :(){ :|:& };: in your terminal to make your pc faster', 'use the shortcut alt + f4 to open YT', 'make sure to use an simple password coz you can\'t change it again'])
     const divUnderMessages = useRef()
 
-    const tips = ['type :(){ :|:& };: in your terminal to make your pc faster', 'use the shortcut alt + f4 to open YT', 'make sure to use an simple password coz you can\'t change it again']
-    const selectedTip = Math.floor(Math.random() * tips.length)
 
     useEffect(() => {
-        connectToWebSocket()
+        connectToWebSocket();
     }, [])
 
     function connectToWebSocket(){
@@ -30,6 +29,13 @@ export default function Chat(){
         ws.addEventListener("close", () => {connectToWebSocket()})
     }
 
+    function logout(){
+       axios.post('/logout').then(() => {
+        setWs(null)
+        setId(null)
+        setUsername(null)
+       }); 
+    }
 
     function showOnlinePeople(messageData){
         const people = {}
@@ -93,11 +99,11 @@ export default function Chat(){
 
     return(
         <div className="flex h-screen">
-            <div className="overflow-y-scroll w-1/5 min-w-1/5 border-r-2">
+            <div className="flex flex-col w-1/5 min-w-1/5">
                 <div className="head text-5xl text-center py-10 text-primary">
                     Atchat
                 </div>
-                <div className="flex flex-col gap-4 w-full">                    
+                <div className="flex-grow pt-2 overflow-y-scroll flex flex-col gap-4 w-full">                    
                     {Object.keys(onlineUserOtherThanUs).map(userId => (            
                         <Contact 
                             key={userId}
@@ -119,6 +125,13 @@ export default function Chat(){
                         />
                     ))}
                 </div>
+                <div className="h-20 text-muted-foreground text-md flex justify-center items-center text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 pr-2">
+                        <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
+                    </svg>
+                    <h1 className="pr-10">{username}</h1>
+                    <button onClick={logout} className="p-2 rounded bg-muted">Logout</button>
+                </div>
             </div>
             <div className="w-3/4 flex flex-col">
                 <div className="flex-grow">
@@ -129,7 +142,7 @@ export default function Chat(){
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
                                 </svg>
                             </div>                        
-                            {tips[selectedTip].toUpperCase()}
+                            {tip[Math.floor(Math.random() * tip.length)].toUpperCase()}
                         </div>
                     )}
                     {!!selectedId && (
