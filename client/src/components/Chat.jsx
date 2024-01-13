@@ -51,7 +51,9 @@ export default function Chat(){
             showOnlinePeople(messageData.online)
         }
         else if("text" in messageData){            
-            setMessage(prev => [...prev,{to:messageData.to,text:messageData.text}])
+            if (messageData.sender === selectedId){
+                setMessage(prev => [...prev,{to:messageData.to,text:messageData.text}])
+            }
         }
     }
 
