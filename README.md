@@ -82,10 +82,6 @@ npm run dev
 ![image1](https://github.com/Dk-09/Dk-09/blob/main/Atchat/1.png)
 ![image1](https://github.com/Dk-09/Dk-09/blob/main/Atchat/2.png)
 
-## License
-
-Distributed under the MIT License. See [LICENSE](https://github.com/Dk-09/Atchat/blob/main/LICENSE.md) for more information.
-
 ## Authors
 
 * **Dk-09** - *Comp Sci Student* - [Dk-09](https://github.com/Dk-09) - *Creator*
